@@ -1,0 +1,54 @@
+#! /bin/busybox sh
+
+exec 1<>/dev/kmsg 2<>/dev/kmsg
+
+busybox --install -s
+rescue_shell()
+{
+	exec 1<>/dev/console 2<>/dev/console
+	echo "Something went wrong. Dropping you to a shell."
+    exec sh
+}
+
+uuidlabel_root() {
+    for cmd in $(cat /proc/cmdline) ; do
+        case $cmd in
+            root=*)
+                type=$(echo $cmd | cut -d= -f2)
+                if [ $type == "LABEL" ] || [ $type == "UUID" ] ; then
+                    uuid=$(echo $cmd | cut -d= -f3)
+                    root=$(findfs "$type"="$uuid")
+                else
+                    root=$(echo $cmd | cut -d= -f2)
+                fi
+            ;;
+            init=*)
+                init=$(echo $cmd | cut -d= -f2)
+            ;;
+        esac
+    done
+}
+
+echo "Initramfs booting..."
+
+mount -t proc none /proc || rescue_shell
+mount -t sysfs none /sys || rescue_shell
+
+echo "Scanning for device nodes..."
+echo /sbin/mdev > /proc/sys/kernel/hotplug
+mdev -s || rescue_shell
+
+echo "Finding lvm devices..."
+lvm vgscan --mknodes || rescue_shell
+echo "Activating lvm devices..."
+lvm vgchange -ay || rescue_shell
+
+uuidlabel_root
+echo "Mounting root device: ${root:-/dev/lvm/gentoo}..."
+mount -n -o ro ${root:-/dev/lvm/gentoo} /root || rescue_shell
+
+echo "Unmounting /sys and /proc ..."
+umount -f /sys /proc || rescue_shell
+
+echo "### resuming normal boot ###"
+exec switch_root /root ${init:-/sbin/init}
