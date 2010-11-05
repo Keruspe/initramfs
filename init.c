@@ -105,7 +105,7 @@ main()
 	/* Cleanup */
 	umount("/sys");
 	umount("/proc");
-	//rm_rf ("/dev");
+	rm_rf ("/dev");
 	fprintf(OUTPUT, "### resuming normal boot ###\n");
 	switch_root();
 	execl(init_path, init_path, NULL);
