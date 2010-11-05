@@ -3,6 +3,7 @@
 #include <dirent.h>
 #include <sys/mount.h>
 #include <sys/wait.h>
+#include <lvm2app.h>
 
 #define DEFAULT_ROOT_PATH "/dev/lvm/gentoo"
 #define DEFAULT_INIT_PATH "/sbin/init"
@@ -12,32 +13,28 @@
 int
 init()
 {
-	/**
-	 * All the basic stuff before the sitch_root is made here
-	 * A separate function is needed because for now, lvm needs an execl
-	 */
-	pid_t pid = 0;
-	if (! (pid = fork()))
+	fprintf(OUTPUT, "Initramfs booting...\n");
+	/* Mount /proc and /sys */
+	mount("none", "/proc", "proc", 0, NULL);
+	mount("none", "/sys", "sysfs", 0, NULL);
+
+	fprintf(OUTPUT, "Finding lvm devices...\n");
+	lvm_t lvmh = lvm_init(NULL);
+	lvm_scan(lvmh);
+	struct dm_list * vgs = lvm_list_vg_names(lvmh);
+	vg_t vg;
+	struct lvm_str_list * strl;
+	struct dm_list * lvs;
+	struct lvm_lv_list * lv_list;
+	dm_list_iterate_items(strl, vgs)
 	{
-		/*
-		 * Here we need to fork too because we need 2 lvm calls
-		 * First part of the stuff goes here
-		 */
-		fprintf(OUTPUT, "Initramfs booting...\n");
-		/* Mount /proc and /sys */
-		mount("none", "/proc", "proc", 0, NULL);
-		mount("none", "/sys", "sysfs", 0, NULL);
-
-		fprintf(OUTPUT, "Finding lvm devices...\n");
-		/* Scan for volume groups */
-		execl("/sbin/lvm", "/sbin/lvm", "vgscan", "--mknodes", NULL);
-
-		return 0;
+		vg = lvm_vg_open(lvmh, strl->str, "r", 0);
+		lvs = lvm_vg_list_lvs(vg);
+		dm_list_iterate_items(lv_list, lvs)
+			lvm_lv_activate(lv_list->lv);
+		lvm_vg_close(vg);
 	}
-
-	waitpid(pid, NULL, 0); /* Wait for the scan to finish */
-	/* Activate the volume groups */
-	execl("/sbin/lvm", "/sbin/lvm", "vgchange", "-ay", NULL);
+	lvm_quit(lvmh);
 
 	return 0;
 }
@@ -108,7 +105,7 @@ main()
 	/* Cleanup */
 	umount("/sys");
 	umount("/proc");
-	rm_rf ("/dev");
+	//rm_rf ("/dev");
 	fprintf(OUTPUT, "### resuming normal boot ###\n");
 	switch_root();
 	execl(init_path, init_path, NULL);
