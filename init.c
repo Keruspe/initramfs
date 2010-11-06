@@ -67,7 +67,7 @@ parse_kernel_cmdline()
 			else
 				strcpy(paths.init, tmp);
 		}
-		else if (c == 'r' && fgetc(f) != 'o' && fgetc(f) == 'o' && fgetc(f) == 't' && fgetc(f) == '=')
+		else if (c == 'r' && fgetc(f) == 'o' && fgetc(f) == 'o' && fgetc(f) == 't' && fgetc(f) == '=')
 			paths.root = get_value(f);
 	}
 	fclose(f);
