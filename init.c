@@ -22,7 +22,7 @@ typedef struct {
 bool
 is_blank(char c)
 {
-	return (c == ' ' || c == '\t' || c == '\n' || c == EOF);
+	return (c == ' ' || c == '\t' || c == '\r' || c == '\n' || c == EOF);
 }
 
 char *
@@ -33,8 +33,8 @@ get_value(FILE * f) {
 	while (!is_blank(c = fgetc(f)))
 	{
 		path[i] = c;
-		if (++i%10 == 1)
-			path = (char *) realloc(path, (i+10) * sizeof(char));
+		if (++i%11 == 0)
+			path = (char *) realloc(path, (i+11) * sizeof(char));
 	}
 	if (i == 0)
 	{
@@ -108,14 +108,13 @@ init()
 }
 
 void
-rm_rf (char * dir_name)
+rm_rf (char * path)
 {
 	/* Recursively remove directory */
-	DIR * dir = opendir(dir_name);
+	DIR * dir = opendir(path);
 	if (dir)
 	{
-		if (! chdir(dir_name))
-			return;
+		if (! chdir(path)) {}
 		struct dirent * d;
 		while ((d = readdir(dir)))
 		{
@@ -126,21 +125,20 @@ rm_rf (char * dir_name)
 			rm_rf (f);
 		}
 		closedir(dir);
-		if (chdir(".."))
-			rmdir(dir_name);
+		if (chdir("..")) {}
+		rmdir(path);
 	}
+	else
+		unlink(path);
 }
 
 void
 switch_root()
 {
-	if (! chdir("/root"))
-		return;
+	if (chdir("/root")) {}
 	mount(".", "/", NULL, MS_MOVE, NULL);
-	if (! chroot("."))
-		return;
-	if (! chdir("/"))
-		return;
+	if (chroot(".")) {}
+	if (chdir("/")) {}
 }
 
 int
@@ -157,7 +155,7 @@ main()
 	/* Mount / */
 	mount(root_path, "/root", ROOT_FILESYSTEM_TYPE, MS_RDONLY, NULL);
 	if (paths.root)
-		free (paths.root);
+		free (root_path);
 	fprintf(OUTPUT, "Unmounting /sys and /proc ...\n");
 	/* Cleanup */
 	umount("/sys");
