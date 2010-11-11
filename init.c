@@ -14,6 +14,8 @@
 #define ROOT_FILESYSTEM_TYPE "ext4"
 #define OUTPUT stdout
 
+bool have_lvm;
+
 typedef struct {
 	char init[MAX_INIT_PATH_SIZE+1]; /* Or we'll have a leak */
 	char * root;
@@ -81,6 +83,7 @@ init()
 	 * All the basic stuff before the sitch_root is made here
 	 * A separate function is needed because for now, lvm needs an execl
 	 */
+	have_lvm = (access("/sbin/lvm", X_OK) == 0);
 	pid_t pid = 0;
 	if (! (pid = fork()))
 	{
@@ -94,15 +97,15 @@ init()
 		mount("none", "/sys", "sysfs", 0, NULL);
 
 		fprintf(OUTPUT, "Finding lvm devices...\n");
-		/* Scan for volume groups */
-		execl("/sbin/lvm", "/sbin/lvm", "vgscan", "--mknodes", NULL);
+		if (have_lvm) /* Scan for volume groups */
+			execl("/sbin/lvm", "/sbin/lvm", "vgscan", "--mknodes", NULL);
 
 		return 0;
 	}
 
 	waitpid(pid, NULL, 0); /* Wait for the scan to finish */
-	/* Activate the volume groups */
-	execl("/sbin/lvm", "/sbin/lvm", "vgchange", "-ay", NULL);
+	if (have_lvm) /* Activate the volume groups */
+		execl("/sbin/lvm", "/sbin/lvm", "vgchange", "-ay", NULL);
 
 	return 0;
 }
