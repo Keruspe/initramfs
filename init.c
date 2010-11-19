@@ -48,9 +48,8 @@ mini_mdev()
 		if (!f[0] || !f[1] || (f[0] != 'h' && f[0] != 's') || (f[1] != 'd'))
 			continue;
 		dev_path[readlink(f, dev_path, MAX_PATH_SIZE)] = '\0';
-		if (chdir(dev_path) != 0)
-			continue;
-		file = fopen("dev", "r");
+		strcat(dev_path, "/dev");
+		file = fopen(dev_path, "r");
 		if (!file || !fgets(vals, MAX_BLOCKNAME_SIZE, file))
 			continue;
 		fclose(file);
@@ -58,8 +57,6 @@ mini_mdev()
 		vals[column_index] = '\0';
 		sprintf(dev, "/dev/%s", f);
 		mknod(dev, S_IFBLK, atoi(vals), atoi(vals + column_index + 1));
-		if (chdir(BLOCK_DIR) != 0)
-			break;
 	}
 	closedir(dir);
 }
