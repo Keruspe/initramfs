@@ -5,6 +5,7 @@
 #include <unistd.h>
 #include <dirent.h>
 #include <sys/mount.h>
+#include <sys/stat.h>
 #include <sys/wait.h>
 
 #define MAX_INIT_PATH_SIZE 25
@@ -14,12 +15,54 @@
 #define ROOT_FILESYSTEM_TYPE "ext4"
 #define OUTPUT stdout
 
+#define BLOCK_DIR "/sys/class/block"
+#define MAX_PATH_SIZE 100
+#define MAX_BLOCKNAME_SIZE 10
+
+#define mknod(n, t, maj, min) mknod(n, (mode_t)(t|0644), (dev_t)(maj<<8 | min))
+
 bool have_lvm;
 
 typedef struct {
 	char init[MAX_INIT_PATH_SIZE+1]; /* Or we'll have a leak */
 	char * root;
-} cmdline;
+} Cmdline;
+
+void
+mini_mdev()
+{
+	mkdir("/dev", 0755);
+	DIR * dir = opendir(BLOCK_DIR);
+	if (!dir || (chdir(BLOCK_DIR) != 0))
+		return;
+	struct dirent * d;
+	char * f;
+	char dev_path[MAX_PATH_SIZE];
+	char vals[MAX_BLOCKNAME_SIZE];
+	char dev[MAX_BLOCKNAME_SIZE];
+	FILE * file;
+	unsigned column_index;
+	while ((d=readdir(dir)))
+	{
+		f = d->d_name;
+		if (!f[0] || !f[1] || (f[0] != 'h' && f[0] != 's') || (f[1] != 'd'))
+			continue;
+		dev_path[readlink(f, dev_path, MAX_PATH_SIZE)] = '\0';
+		if (chdir(dev_path) != 0)
+			continue;
+		file = fopen("dev", "r");
+		if (!file || !fgets(vals, MAX_BLOCKNAME_SIZE, file))
+			continue;
+		fclose(file);
+		for (column_index = 0 ; vals[column_index] != ':' ; ++column_index);
+		vals[column_index] = '\0';
+		sprintf(dev, "/dev/%s", f);
+		mknod(dev, S_IFBLK, atoi(vals), atoi(vals + column_index + 1));
+		if (chdir(BLOCK_DIR) != 0)
+			break;
+	}
+	closedir(dir);
+}
 
 bool
 is_blank(char c)
@@ -47,10 +90,10 @@ get_value(FILE * f) {
 	return path;
 }
 
-cmdline
+Cmdline
 parse_kernel_cmdline()
 {
-	cmdline paths;
+	Cmdline paths;
 	paths.root = NULL;
 	paths.init[0] = '\0';
 	FILE * f = fopen("/proc/cmdline", "r");
@@ -95,6 +138,7 @@ init()
 		/* Mount /proc and /sys */
 		mount("none", "/proc", "proc", 0, NULL);
 		mount("none", "/sys", "sysfs", 0, NULL);
+		mini_mdev();
 
 		fprintf(OUTPUT, "Finding lvm devices...\n");
 		if (have_lvm) /* Scan for volume groups */
@@ -122,7 +166,7 @@ rm_rf (char * path)
 		while ((d = readdir(dir)))
 		{
 			char * f = d->d_name;
-			/* Don't delete . or .. */
+			/* Don't delete . nor .. */
 			if (f[0] == '.' && (!f[1] || (f[1] == '.' && !f[2])))
 				continue;
 			rm_rf (f);
@@ -151,7 +195,7 @@ main()
 	if (! (pid = fork()))
 		return init(); /* Do the first part of the basic stuff in a fork */
 	waitpid(pid, NULL, 0); /* Wait for the lvm volume groups to be activated */
-	cmdline paths = parse_kernel_cmdline();
+	Cmdline paths = parse_kernel_cmdline();
 	char * root_path = paths.root ? paths.root : DEFAULT_ROOT_PATH;
 	char * init_path = (paths.init[0] != '\0') ? paths.init : DEFAULT_INIT_PATH;
 	fprintf(OUTPUT, "Mounting root device: %s...\n", root_path);
