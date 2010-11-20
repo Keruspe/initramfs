@@ -21,7 +21,7 @@
 
 #define mknod(n, t, maj, min) mknod(n, (mode_t)(t|0644), (dev_t)(maj<<8 | min))
 
-bool have_lvm;
+bool have_lvm, have_mdadm;
 
 typedef struct {
 	char init[MAX_INIT_PATH_SIZE+1]; /* Or we'll have a leak */
@@ -117,6 +117,24 @@ parse_kernel_cmdline()
 }
 
 int
+mdadm_stuff()
+{
+	pid_t pid = 0;
+	if (! (pid = fork()))
+		execl("/sbin/mdadm", "/sbin/mdadm", "--assemble", "--scan", NULL);
+	waitpid(pid, NULL, 0);
+	return 0;
+}
+
+void
+lvm_stuff()
+{
+	if (have_mdadm)
+		mdadm_stuff();
+	execl("/sbin/lvm", "/sbin/lvm", "vgscan", "--mknodes", NULL);
+}
+
+int
 init()
 {
 	/**
@@ -124,10 +142,11 @@ init()
 	 * A separate function is needed because for now, lvm needs an execl
 	 */
 	have_lvm = (access("/sbin/lvm", X_OK) == 0);
+	have_mdadm = (access("/sbin/mdadm", X_OK) == 0);
 	pid_t pid = 0;
 	if (! (pid = fork()))
 	{
-		/*
+		/**
 		 * Here we need to fork too because we need 2 lvm calls
 		 * First part of the stuff goes here
 		 */
@@ -139,7 +158,7 @@ init()
 
 		fprintf(OUTPUT, "Finding lvm devices...\n");
 		if (have_lvm) /* Scan for volume groups */
-			execl("/sbin/lvm", "/sbin/lvm", "vgscan", "--mknodes", NULL);
+			lvm_stuff();
 
 		return 0;
 	}
