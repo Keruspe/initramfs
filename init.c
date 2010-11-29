@@ -56,6 +56,7 @@ mini_mdev()
 		for (column_index = 0 ; vals[column_index] != ':' ; ++column_index);
 		vals[column_index] = '\0';
 		sprintf(dev, "/dev/%s", f);
+		fprintf(OUTPUT, "Adding node %s\n", dev);
 		mknod(dev, S_IFBLK, atoi(vals), atoi(vals + column_index + 1));
 	}
 	closedir(dir);
@@ -154,7 +155,9 @@ init()
 		/* Mount /proc and /sys */
 		mount("none", "/proc", "proc", 0, NULL);
 		mount("none", "/sys", "sysfs", 0, NULL);
+		fprintf(OUTPUT, "Start adding block devices nodes\n");
 		mini_mdev();
+		fprintf(OUTPUT, "Finished adding block devices nodes\n");
 
 		fprintf(OUTPUT, "Finding lvm devices...\n");
 		if (have_lvm) /* Scan for volume groups */
@@ -211,7 +214,9 @@ main()
 	if (! (pid = fork()))
 		return init(); /* Do the first part of the basic stuff in a fork */
 	waitpid(pid, NULL, 0); /* Wait for the lvm volume groups to be activated */
+	fprintf(OUTPUT, "Parsing kernel cmdline for root and init paths\n");
 	Cmdline paths = parse_kernel_cmdline();
+	fprintf(OUTPUT, "Done\n");
 	char * root_path = paths.root ? paths.root : DEFAULT_ROOT_PATH;
 	char * init_path = (paths.init[0] != '\0') ? paths.init : DEFAULT_INIT_PATH;
 	fprintf(OUTPUT, "Mounting root device: %s...\n", root_path);
