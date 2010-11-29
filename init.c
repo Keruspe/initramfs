@@ -17,7 +17,7 @@
 
 #define BLOCK_DIR "/sys/class/block"
 #define MAX_PATH_SIZE 100
-#define MAX_BLOCKNAME_SIZE 10
+#define MAX_BLOCKNAME_SIZE 12
 
 #define mknod(n, t, maj, min) mknod(n, (mode_t)(t|0644), (dev_t)(maj<<8 | min))
 
