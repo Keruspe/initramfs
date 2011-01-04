@@ -1,30 +1,43 @@
-#include <stdbool.h>
+#include <stdio.h>
 #include <unistd.h>
 #include <sys/wait.h>
 
-bool have_lvm, have_mdadm;
+#define OUTPUT stdout
 
 void
-init_dm()
+mdadm_activate()
 {
-	have_lvm = (access("/sbin/lvm", X_OK) == 0);
-	have_mdadm = (access("/sbin/mdadm", X_OK) == 0);
-}
-
-int
-mdadm_stuff()
-{
+	if (access("/sbin/mdadm", X_OK) != 0)
+		return;
+	fprintf(OUTPUT, "Activating mdadm RAID arrays...\n");
 	pid_t pid = 0;
 	if (! (pid = fork()))
 		execl("/sbin/mdadm", "/sbin/mdadm", "--assemble", "--scan", NULL);
-	waitpid(pid, NULL, 0);
-	return 0;
+	else
+		waitpid(pid, NULL, 0);
+}
+
+static void
+lvm_scan()
+{
+	fprintf(OUTPUT, "Scanning for lvm devices...\n");
+	pid_t pid = 0;
+	if (! (pid = fork()))
+		execl("/sbin/lvm", "/sbin/lvm", "vgscan", "--mknodes", NULL);
+	else
+		waitpid(pid, NULL, 0);
 }
 
 void
-lvm_stuff()
+lvm_activate()
 {
-	if (have_mdadm)
-		mdadm_stuff();
-	execl("/sbin/lvm", "/sbin/lvm", "vgscan", "--mknodes", NULL);
+	if (access("/sbin/lvm", X_OK) != 0)
+		return;
+	lvm_scan();
+	fprintf(OUTPUT, "Activating lvm devices...\n");
+	pid_t pid = 0;
+	if (! (pid = fork()))
+		execl("/sbin/lvm", "/sbin/lvm", "vgchange", "-ay", NULL);
+	else
+		waitpid(pid, NULL, 0);
 }
