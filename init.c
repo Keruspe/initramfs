@@ -16,7 +16,7 @@
 #define OUTPUT stdout
 
 #define BLOCK_DIR "/sys/class/block"
-#define MAX_PATH_SIZE 100
+#define MAX_PATH_SIZE 256
 #define MAX_BLOCKNAME_SIZE 12
 
 #define mknod(n, t, maj, min) mknod(n, (mode_t)(t|0644), (dev_t)(maj<<8 | min))
@@ -47,10 +47,9 @@ mini_mdev()
 		f = d->d_name;
 		if (!f[0] || !f[1] || (f[0] != 'h' && f[0] != 's') || (f[1] != 'd'))
 			continue;
-		dev_path[readlink(f, dev_path, MAX_PATH_SIZE)] = '\0';
-		strcat(dev_path, "/dev");
+		sprintf(dev_path, "%s/dev", f);
 		file = fopen(dev_path, "r");
-		if (!file || !fgets(vals, MAX_BLOCKNAME_SIZE, file))
+		if (!file || !fgets(vals, MAX_BLOCKNAME_SIZE - 1, file))
 			continue;
 		fclose(file);
 		for (column_index = 0 ; vals[column_index] != ':' ; ++column_index);
