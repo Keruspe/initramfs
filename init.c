@@ -12,27 +12,13 @@
 #define ROOT_FILESYSTEM_TYPE "ext4"
 #define OUTPUT stdout
 
-static void
-basic_init()
-{
-	mount("none", "/proc", "proc", 0, NULL);
-	mount("none", "/sys", "sysfs", 0, NULL);
-	mini_mdev();
-}
-
-static void
-basic_desinit()
-{
-	umount("/sys");
-	umount("/proc");
-	rm_rf ("/dev");
-}
-
 int
 main()
 {
 	fprintf(OUTPUT, "Initramfs booting...\n");
-	basic_init();
+	mount("none", "/proc", "proc", 0, NULL);
+	mount("none", "/sys", "sysfs", 0, NULL);
+	mini_mdev();
 	mdadm_activate();
 	lvm_activate();
 	Cmdline paths = parse_kernel_cmdline();
@@ -42,7 +28,9 @@ main()
 	mount(root_path, "/root", ROOT_FILESYSTEM_TYPE, MS_RDONLY, NULL);
 	if (paths.root)
 		free (root_path);
-	basic_desinit();
+	umount("/sys");
+	umount("/proc");
+	rm_rf ("/dev");
 	fprintf(OUTPUT, "Resuming normal boot with init: %s...\n", init_path);
 	switch_root();
 	execl(init_path, init_path, NULL);
