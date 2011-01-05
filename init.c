@@ -28,10 +28,9 @@ main()
 	mount(root_path, "/root", ROOT_FILESYSTEM_TYPE, MS_RDONLY, NULL);
 	if (paths.root)
 		free (root_path);
-	umount("/sys");
 	umount("/proc");
+	umount("/sys");
 	rm_rf ("/dev");
 	fprintf(OUTPUT, "Resuming normal boot with init: %s...\n", init_path);
-	switch_root();
-	execl(init_path, init_path, NULL);
+	switch_root(init_path);
 }

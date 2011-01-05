@@ -3,6 +3,6 @@
 
 void mini_mdev();
 void rm_rf (char * path);
-void switch_root();
+void switch_root(char * init_path);
 
 #endif /* __UTILS_H__ */

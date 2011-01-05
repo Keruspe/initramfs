@@ -42,6 +42,7 @@ mini_mdev()
 		sprintf(dev, "/dev/%s", f);
 		mknod(dev, S_IFBLK, atoi(vals), atoi(vals + column_index + 1));
 	}
+	if (chdir("/") != 0) { /* return; */ }
 	closedir(dir);
 }
 
@@ -72,10 +73,11 @@ rm_rf (char * path)
 }
 
 void
-switch_root()
+switch_root(char * init_path)
 {
 	if (chdir("/root") != 0) return;
 	mount(".", "/", NULL, MS_MOVE, NULL);
 	if (chroot(".") != 0) return;
-	if (chdir("/") != 0) { /* return; */ }
+	if (chdir("/") != 0) return;
+	execl(init_path, init_path, NULL);
 }
