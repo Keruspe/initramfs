@@ -2,6 +2,6 @@ To build it :
 If you want lvm support : make lvm
 If you want mdadm support : make mdadm
 If you want both : make both
-Then set as initramfs src into your kernel ${checkout-dir}/initramfs
-where ${checkout-dir} is the dir inside which the sources are
+Then set as initramfs src into your kernel /usr/src/initramfs/initramfs
+(You must have git clone this into /usr/src/initramfs)
 
