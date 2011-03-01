@@ -9,7 +9,7 @@
 
 #define DEFAULT_ROOT_PATH "/dev/lvm/gentoo"
 #define DEFAULT_INIT_PATH "/sbin/init"
-#define ROOT_FILESYSTEM_TYPE "ext4"
+#define ROOT_FILESYSTEM_TYPE "auto"
 #define OUTPUT stdout
 
 int

@@ -29,5 +29,5 @@ lvm_activate()
 		return;
 	lvm_scan();
 	fprintf(OUTPUT, "Activating lvm devices...\n");
-	exec_bg_and_wait("/sbin/lvm", "/sbin/lvm", "vgchange", "-ay", NULL);
+	exec_bg_and_wait("/sbin/lvm", "/sbin/lvm", "vgchange", "--ignorelockingfailure", "-ay", NULL);
 }
