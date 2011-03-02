@@ -1,7 +1,5 @@
 #! /bin/busybox sh
 
-exec 1<>/dev/kmsg 2<>/dev/kmsg
-
 busybox --install -s
 rescue_shell()
 {
