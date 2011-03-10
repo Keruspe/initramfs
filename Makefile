@@ -6,16 +6,16 @@ mdadm: init initramfs-mdadm
 
 both: init initramfs
 
-init: init.c
+init: init.c dm_stuff.c cmdline.c utils.c run_bg.c
 	gcc init.c dm_stuff.c cmdline.c utils.c run_bg.c -O2 -march=native -Wall -Wextra -Werror -pedantic -std=gnu99 -o init -Wl,-O2 -Wl,--as-needed -static
 
-initramfs-lvm:
+initramfs-lvm: initramfs.in
 	sed '/mdadm/d' initramfs.in > initramfs
 
-initramfs-mdadm:
+initramfs-mdadm: initramfs.in
 	sed '/lvm/d' initramfs.in > initramfs
 
-initramfs:
+initramfs: initramfs.in
 	cp initramfs.in initramfs
 
 clean:
