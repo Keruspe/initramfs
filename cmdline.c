@@ -51,10 +51,9 @@ parse_kernel_cmdline()
 			char * tmp = get_value(f);
 			if (!tmp)
 				continue;
-			else if (strlen(tmp) > MAX_INIT_PATH_SIZE)
-				free(tmp);
-			else
+			else if (strlen(tmp) < MAX_INIT_PATH_SIZE)
 				strcpy(paths.init, tmp);
+			free(tmp);
 		}
 		else if (c == 'r' && fgetc(f) == 'o' && fgetc(f) == 'o' && fgetc(f) == 't' && fgetc(f) == '=')
 			paths.root = get_value(f);
