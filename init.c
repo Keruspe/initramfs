@@ -1,6 +1,5 @@
 #include "cmdline.h"
 #include "dm_stuff.h"
-#include "utils.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -11,6 +10,16 @@
 #define DEFAULT_INIT_PATH "/sbin/init"
 #define ROOT_FILESYSTEM_TYPE "ext4"
 #define OUTPUT stdout
+
+void
+switch_root(char * init_path)
+{
+	if (chdir("/root") != 0) return;
+	mount(".", "/", NULL, MS_MOVE, NULL);
+	if (chroot(".") != 0) return;
+	if (chdir("/") != 0) return;
+	execl(init_path, init_path, NULL);
+}
 
 int
 main()
