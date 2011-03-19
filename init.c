@@ -18,7 +18,7 @@ main()
 	fprintf(OUTPUT, "Initramfs booting...\n");
 	mount("none", "/proc", "proc", 0, NULL);
 	mount("none", "/sys", "sysfs", 0, NULL);
-	mini_mdev();
+	mount("none", "/dev", "devtmpfs", 0, NULL);
 	mdadm_activate();
 	lvm_activate();
 	Cmdline paths = parse_kernel_cmdline();
@@ -30,7 +30,7 @@ main()
 		free (root_path);
 	umount("/proc");
 	umount("/sys");
-	rm_rf ("/dev");
+	umount("/dev");
 	fprintf(OUTPUT, "Resuming normal boot with init: %s...\n", init_path);
 	switch_root(init_path);
 }
