@@ -5,8 +5,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define OUTPUT stdout
-
 static bool
 is_blank(char c)
 {
@@ -36,7 +34,6 @@ get_value(FILE * f) {
 Cmdline
 parse_kernel_cmdline()
 {
-	fprintf(OUTPUT, "Parsing kernel cmdline for root and init paths...\n");
 	Cmdline paths;
 	paths.root = NULL;
 	paths.init[0] = '\0';
