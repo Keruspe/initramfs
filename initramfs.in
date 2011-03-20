@@ -3,12 +3,6 @@ dir /proc 755 0 0
 dir /sys  755 0 0
 dir /root 755 0 0
 dir /dev  755 0 0
-nod /dev/null    666 0 0 c 1 3
-nod /dev/zero    666 0 0 c 1 5
-nod /dev/random  666 0 0 c 1 8
-nod /dev/urandom 666 0 0 c 1 9
-nod /dev/console 600 0 0 c 5 1
-nod /dev/kmsg    600 0 0 c 1 11
 file /sbin/lvm   /sbin/lvm.static        755 0 0
 file /sbin/mdadm /sbin/mdadm             755 0 0
 file /init       /usr/src/initramfs/init 755 0 0
