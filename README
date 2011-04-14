@@ -4,5 +4,5 @@ If you want mdadm support : make mdadm
 If you want both : make both
 Then set as initramfs src into your kernel /usr/src/initramfs/initramfs
 (You must have git clone this into /usr/src/initramfs)
-glibc 2_12_2 is required
+a recent klibc is required
 
