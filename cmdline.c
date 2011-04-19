@@ -1,11 +1,9 @@
 #include "cmdline.h"
 
-#include <stdbool.h>
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 
-static bool
+static int 
 is_blank(char c)
 {
 	return (c == ' ' || c == '\t' || c == '\r' || c == '\n' || c == EOF);
@@ -13,14 +11,14 @@ is_blank(char c)
 
 static char *
 get_value(FILE * f) {
-	char * path = (char *) malloc(11*sizeof(char)); /* /sbin/init size */
+	char * path = (char *) malloc(13*sizeof(char)); /* /bin/systemd size */
 	int i = 0;
 	char c;
 	while (!is_blank(c = fgetc(f)))
 	{
 		path[i] = c;
-		if (++i%11 == 0)
-			path = (char *) realloc(path, (i+11) * sizeof(char));
+		if (++i%13 == 0)
+			path = (char *) realloc(path, (i+13) * sizeof(char));
 	}
 	if (i == 0)
 	{

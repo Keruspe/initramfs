@@ -1,6 +1,8 @@
 #ifndef __CMDLINE_H__
 #define __CMDLINE_H__
 
+#include <stdlib.h>
+
 #define MAX_INIT_PATH_SIZE 25
 
 typedef struct {

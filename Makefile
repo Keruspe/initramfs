@@ -6,8 +6,8 @@ mdadm: init initramfs-mdadm
 
 both: init initramfs
 
-init: init.c dm_stuff.c cmdline.c run_bg.c
-	klcc init.c dm_stuff.c cmdline.c run_bg.c -O3 -march=native -Wall -Wextra -Werror -std=gnu99 -o init -Wl,-O2 -Wl,--as-needed -static
+init: init.c cmdline.c
+	klcc init.c cmdline.c -O3 -march=native -Wall -Wextra -Werror -std=gnu99 -o init -Wl,-O2 -Wl,--as-needed -static
 
 initramfs-lvm: initramfs.in
 	sed '/mdadm/d' initramfs.in > initramfs
