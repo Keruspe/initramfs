@@ -7,7 +7,7 @@
 
 #define DEFAULT_ROOT_PATH "/dev/lvm/gentoo"
 #define DEFAULT_INIT_PATH "/bin/systemd"
-#define ROOT_FILESYSTEM_TYPE "ext4"
+#define DEFAULT_FILESYSTEM_TYPE "ext4"
 
 #define MAX_ARGS 31
 
@@ -41,13 +41,16 @@ main()
     if (access("/sbin/mdadm", X_OK) == 0)
         exec_bg_and_wait("/sbin/mdadm", "/sbin/mdadm", "--assemble", "--scan", NULL);
     if (access("/sbin/lvm", X_OK) == 0)
-        exec_bg_and_wait("/sbin/lvm", "/sbin/lvm", "vgchange", "--sysinit", "--noudevsync", "-ay", NULL);
-    Cmdline paths = parse_kernel_cmdline();
-    char * root_path = paths.root ? paths.root : DEFAULT_ROOT_PATH;
-    char * init_path = (paths.init[0] != '\0') ? paths.init : DEFAULT_INIT_PATH;
-    mount(root_path, "/root", ROOT_FILESYSTEM_TYPE, MS_RDONLY, NULL);
-    if (paths.root)
+        exec_bg_and_wait("/sbin/lvm", "/sbin/lvm", "vgchange", "--sysinit", "-a", "ly", NULL);
+    Cmdline cmdline = parse_kernel_cmdline();
+    char * root_path = cmdline.root ? cmdline.root : DEFAULT_ROOT_PATH;
+    char * root_fs = cmdline.fs ? cmdline.fs : DEFAULT_FILESYSTEM_TYPE;
+    char * init_path = (cmdline.init[0] != '\0') ? cmdline.init : DEFAULT_INIT_PATH;
+    mount(root_path, "/root", root_fs, MS_RDONLY, NULL);
+    if (cmdline.root)
         free (root_path);
+    if (cmdline.fs)
+        free (root_fs);
     umount("/proc");
     umount("/sys");
     umount("/dev");

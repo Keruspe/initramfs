@@ -32,12 +32,12 @@ get_value(FILE * f) {
 Cmdline
 parse_kernel_cmdline()
 {
-    Cmdline paths;
-    paths.root = NULL;
-    paths.init[0] = '\0';
+    Cmdline cmdline;
+    cmdline.root = NULL;
+    cmdline.init[0] = '\0';
     FILE * f = fopen("/proc/cmdline", "r");
     if (!f)
-        return paths;
+        return cmdline;
     char c;
     while ((c = fgetc(f)) != EOF)
     {
@@ -47,12 +47,14 @@ parse_kernel_cmdline()
             if (!tmp)
                 continue;
             else if (strlen(tmp) < MAX_INIT_PATH_SIZE)
-                strcpy(paths.init, tmp);
+                strcpy(cmdline.init, tmp);
             free(tmp);
         }
         else if (c == 'r' && fgetc(f) == 'o' && fgetc(f) == 'o' && fgetc(f) == 't' && fgetc(f) == '=')
-            paths.root = get_value(f);
+            cmdline.root = get_value(f);
+        else if (c == 'f' && fgetc(f) == 's' && fgetc(f) == '=')
+            cmdline.fs = get_value(f);
     }
     fclose(f);
-    return paths;
+    return cmdline;
 }

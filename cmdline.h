@@ -8,6 +8,7 @@
 typedef struct {
     char init[MAX_INIT_PATH_SIZE+1]; /* Or we'll have a leak */
     char * root;
+    char * fs;
 } Cmdline;
 
 Cmdline parse_kernel_cmdline();
