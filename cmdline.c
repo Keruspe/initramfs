@@ -34,6 +34,7 @@ parse_kernel_cmdline()
 {
     Cmdline cmdline;
     cmdline.root = NULL;
+    cmdline.fs = NULL;
     cmdline.init[0] = '\0';
     FILE * f = fopen("/proc/cmdline", "r");
     if (!f)
