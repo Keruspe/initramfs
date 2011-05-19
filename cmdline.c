@@ -32,10 +32,11 @@ get_value(FILE * f) {
 Cmdline
 parse_kernel_cmdline()
 {
-    Cmdline cmdline;
-    cmdline.root = NULL;
-    cmdline.fs = NULL;
-    cmdline.init[0] = '\0';
+    Cmdline cmdline = {
+        .root = NULL,
+        .fs = NULL,
+        .init = ""
+    };
     FILE * f = fopen("/proc/cmdline", "r");
     if (!f)
         return cmdline;
