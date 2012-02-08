@@ -6,7 +6,7 @@
 #include <sys/wait.h>
 
 #define DEFAULT_ROOT_PATH "/dev/mapper/lvm-gentoo"
-#define DEFAULT_INIT_PATH "/bin/systemd"
+#define DEFAULT_INIT_PATH "/usr/lib64/systemd/systemd"
 #define DEFAULT_FILESYSTEM_TYPE "ext4"
 
 #define MAX_ARGS 31
