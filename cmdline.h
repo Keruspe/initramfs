@@ -11,6 +11,6 @@ typedef struct {
     char * fs;
 } Cmdline;
 
-Cmdline parse_kernel_cmdline();
+Cmdline parse_kernel_cmdline ();
 
 #endif /* __CMDLINE_H__ */

@@ -3,6 +3,4 @@ dir /proc 755 0 0
 dir /sys  755 0 0
 dir /root 755 0 0
 dir /dev  755 0 0
-file /sbin/lvm   /sbin/lvm.static        755 0 0
-file /sbin/mdadm /sbin/mdadm             755 0 0
 file /init       /usr/src/initramfs/init 755 0 0
