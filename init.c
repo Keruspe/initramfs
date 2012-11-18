@@ -1,6 +1,7 @@
-#include "cmdline.h"
-
 #include <gpgme.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 #include <sys/mount.h>
 
@@ -12,6 +13,40 @@
 #define LUKS_HEADER_ENCRYPTED LUKS_HEADER_PLAIN ".gpg"
 #define LUKS_PASSFILE_PLAIN "/root/luks_passfile"
 #define LUKS_PASSFILE_ENCRYPTED LUKS_PASSFILE_PLAIN ".gpg"
+
+#define MAX_INIT_PATH_SIZE 25
+
+typedef struct {
+    char init[MAX_INIT_PATH_SIZE+1]; /* Or we'll have a leak */
+    char *root;
+    char *fs;
+} Cmdline;
+
+static int 
+is_blank (char c)
+{
+    return (c == ' ' || c == '\t' || c == '\r' || c == '\n' || c == EOF);
+}
+
+static char *
+get_value (FILE *f) {
+    char *path = (char *) malloc (10 * sizeof (char));
+    int i = 0;
+    char c;
+    while (!is_blank (c = fgetc (f)))
+    {
+        path[i] = c;
+        if (++i % 10 == 0)
+            path = (char *) realloc (path, (i + 10) * sizeof (char));
+    }
+    if (i == 0)
+    {
+        free (path);
+        return NULL;
+    }
+    path[i] = '\0';
+    return path;
+}
 
 static void
 gpgme_decrypt (gpgme_ctx_t context,
@@ -52,16 +87,44 @@ main (void)
 
     gpgme_release (context);
 
-    Cmdline cmdline = parse_kernel_cmdline ();
-    char *root_path = cmdline.root ? cmdline.root : DEFAULT_ROOT_PATH;
-    char *root_fs = cmdline.fs ? cmdline.fs : DEFAULT_FILESYSTEM_TYPE;
-    char *init_path = (cmdline.init[0] != '\0') ? cmdline.init : DEFAULT_INIT_PATH;
+    Cmdline cmd = {
+        .root = NULL,
+        .fs = NULL,
+        .init = ""
+    };
+
+    FILE *cmdline = fopen ("/proc/cmdline", "r");
+    if (cmdline)
+    {
+        char c;
+        while ((c = fgetc (cmdline)) != EOF)
+        {
+            if (c == 'i' && fgetc (cmdline) == 'n' && fgetc (cmdline) == 'i' && fgetc (cmdline) == 't' && fgetc (cmdline) == '=')
+            {
+                char *tmp = get_value (cmdline);
+                if (!tmp)
+                    continue;
+                else if (strlen (tmp) < MAX_INIT_PATH_SIZE)
+                    strcpy (cmd.init, tmp);
+                free (tmp);
+            }
+            else if (c == 'r' && fgetc (cmdline) == 'o' && fgetc (cmdline) == 'o' && fgetc (cmdline) == 't' && fgetc (cmdline) == '=')
+                cmd.root = get_value (cmdline);
+            else if (c == 'f' && fgetc (cmdline) == 's' && fgetc(cmdline) == '=')
+                cmd.fs = get_value (cmdline);
+        }
+        fclose (cmdline);
+    }
+
+    char *root_path = cmd.root ? cmd.root : DEFAULT_ROOT_PATH;
+    char *root_fs = cmd.fs ? cmd.fs : DEFAULT_FILESYSTEM_TYPE;
+    char *init_path = (cmd.init[0] != '\0') ? cmd.init : DEFAULT_INIT_PATH;
     
     mount (root_path, "/root", root_fs, MS_RDONLY, NULL);
     
-    if (cmdline.root)
+    if (cmd.root)
         free (root_path);
-    if (cmdline.fs)
+    if (cmd.fs)
         free (root_fs);
     
     umount ("/proc");
