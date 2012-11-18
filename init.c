@@ -1,5 +1,6 @@
 #include "cmdline.h"
 
+#include <gpgme.h>
 #include <unistd.h>
 #include <sys/mount.h>
 
@@ -7,12 +8,49 @@
 #define DEFAULT_INIT_PATH "/sbin/init"
 #define DEFAULT_FILESYSTEM_TYPE "ext4"
 
+#define LUKS_HEADER_PLAIN "/root/luks_header"
+#define LUKS_HEADER_ENCRYPTED LUKS_HEADER_PLAIN ".gpg"
+#define LUKS_PASSFILE_PLAIN "/root/luks_passfile"
+#define LUKS_PASSFILE_ENCRYPTED LUKS_PASSFILE_PLAIN ".gpg"
+
+static void
+gpgme_decrypt (gpgme_ctx_t context,
+               const char *encrypted_file,
+               const char *plain_file)
+{
+    gpgme_data_t encrypted, plain;
+    FILE *ef = fopen (encrypted_file, "r");
+    FILE *pf = fopen (plain_file, "w+");
+    gpgme_data_new_from_stream (&encrypted, ef);
+    gpgme_data_new_from_stream (&plain, pf);
+
+    gpgme_op_decrypt (context, encrypted, plain);
+
+    gpgme_data_release (plain);
+    gpgme_data_release (encrypted);
+    fclose (ef);
+    fclose (pf);
+}
+
 int
 main (void)
 {
     mount ("none", "/proc", "proc", 0, NULL);
     mount ("none", "/sys", "sysfs", 0, NULL);
     mount ("none", "/dev", "devtmpfs", 0, NULL);
+
+    gpgme_ctx_t context;
+    gpgme_check_version (NULL);
+    gpgme_new (&context);
+
+    gpgme_decrypt (context,
+                   LUKS_HEADER_ENCRYPTED,
+                   LUKS_HEADER_PLAIN);
+    gpgme_decrypt (context,
+                   LUKS_PASSFILE_ENCRYPTED,
+                   LUKS_PASSFILE_PLAIN);
+
+    gpgme_release (context);
 
     Cmdline cmdline = parse_kernel_cmdline ();
     char *root_path = cmdline.root ? cmdline.root : DEFAULT_ROOT_PATH;
