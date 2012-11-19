@@ -17,7 +17,6 @@
 #define MAX_INIT_PATH_SIZE 25
 
 typedef struct {
-    char init[MAX_INIT_PATH_SIZE+1]; /* Or we'll have a leak */
     char *root;
 } Cmdline;
 
@@ -88,7 +87,6 @@ main (void)
 
     Cmdline cmd = {
         .root = NULL,
-        .init = ""
     };
 
     FILE *cmdline = fopen ("/proc/cmdline", "r");
@@ -97,23 +95,13 @@ main (void)
         char c;
         while ((c = fgetc (cmdline)) != EOF)
         {
-            if (c == 'i' && fgetc (cmdline) == 'n' && fgetc (cmdline) == 'i' && fgetc (cmdline) == 't' && fgetc (cmdline) == '=')
-            {
-                char *tmp = get_value (cmdline);
-                if (!tmp)
-                    continue;
-                else if (strlen (tmp) < MAX_INIT_PATH_SIZE)
-                    strcpy (cmd.init, tmp);
-                free (tmp);
-            }
-            else if (c == 'r' && fgetc (cmdline) == 'o' && fgetc (cmdline) == 'o' && fgetc (cmdline) == 't' && fgetc (cmdline) == '=')
+            if (c == 'r' && fgetc (cmdline) == 'o' && fgetc (cmdline) == 'o' && fgetc (cmdline) == 't' && fgetc (cmdline) == '=')
                 cmd.root = get_value (cmdline);
         }
         fclose (cmdline);
     }
 
     char *root_path = cmd.root ? cmd.root : DEFAULT_ROOT_PATH;
-    char *init_path = (cmd.init[0] != '\0') ? cmd.init : DEFAULT_INIT_PATH;
     
     mount (root_path, "/root", DEFAULT_FILESYSTEM_TYPE, MS_RDONLY, NULL);
     
@@ -129,5 +117,5 @@ main (void)
     if (chroot (".") != 0) return -1;
     if (chdir ("/") != 0) return -1;
     
-    execl (init_path, init_path, NULL);
+    execl (DEFAULT_INIT_PATH, DEFAULT_INIT_PATH, NULL);
 }
