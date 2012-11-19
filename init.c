@@ -19,7 +19,6 @@
 typedef struct {
     char init[MAX_INIT_PATH_SIZE+1]; /* Or we'll have a leak */
     char *root;
-    char *fs;
 } Cmdline;
 
 static int 
@@ -89,7 +88,6 @@ main (void)
 
     Cmdline cmd = {
         .root = NULL,
-        .fs = NULL,
         .init = ""
     };
 
@@ -110,22 +108,17 @@ main (void)
             }
             else if (c == 'r' && fgetc (cmdline) == 'o' && fgetc (cmdline) == 'o' && fgetc (cmdline) == 't' && fgetc (cmdline) == '=')
                 cmd.root = get_value (cmdline);
-            else if (c == 'f' && fgetc (cmdline) == 's' && fgetc(cmdline) == '=')
-                cmd.fs = get_value (cmdline);
         }
         fclose (cmdline);
     }
 
     char *root_path = cmd.root ? cmd.root : DEFAULT_ROOT_PATH;
-    char *root_fs = cmd.fs ? cmd.fs : DEFAULT_FILESYSTEM_TYPE;
     char *init_path = (cmd.init[0] != '\0') ? cmd.init : DEFAULT_INIT_PATH;
     
-    mount (root_path, "/root", root_fs, MS_RDONLY, NULL);
+    mount (root_path, "/root", DEFAULT_FILESYSTEM_TYPE, MS_RDONLY, NULL);
     
     if (cmd.root)
         free (root_path);
-    if (cmd.fs)
-        free (root_fs);
     
     umount ("/proc");
     umount ("/sys");
