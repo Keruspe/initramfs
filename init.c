@@ -11,8 +11,9 @@
 #define LUKS_PASSFILE_PLAIN "/root/luks_passfile"
 #define LUKS_PASSFILE_ENCRYPTED LUKS_PASSFILE_PLAIN ".gpg"
 #define LUKS_DATA_DEVICE "/dev/sda5"
+#define LUKS_VOLUME "root-luks"
 
-#define DEFAULT_ROOT_PATH "/dev/mapper/root-luks"
+#define DEFAULT_ROOT_PATH "/dev/mapper/" LUKS_VOLUME
 #define DEFAULT_INIT_PATH "/sbin/init"
 #define DEFAULT_FILESYSTEM_TYPE "ext4"
 
@@ -86,7 +87,7 @@ main (void)
     crypt_load(cd, CRYPT_LUKS1, NULL);
     crypt_set_data_device(cd, LUKS_DATA_DEVICE);
     crypt_set_password_retry(cd, 1);
-    crypt_activate_by_keyfile_offset(cd, DEFAULT_ROOT_PATH, 0, LUKS_PASSFILE_PLAIN, 0, 0, 0);
+    crypt_activate_by_keyfile_offset(cd, LUKS_VOLUME, 0, LUKS_PASSFILE_PLAIN, 0, 0, 0);
     crypt_free (cd);
 
     char *root_path = NULL;
