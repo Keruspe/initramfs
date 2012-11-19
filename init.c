@@ -16,10 +16,6 @@
 
 #define MAX_INIT_PATH_SIZE 25
 
-typedef struct {
-    char *root;
-} Cmdline;
-
 static int 
 is_blank (char c)
 {
@@ -85,10 +81,7 @@ main (void)
 
     gpgme_release (context);
 
-    Cmdline cmd = {
-        .root = NULL,
-    };
-
+    char *root_path = NULL;
     FILE *cmdline = fopen ("/proc/cmdline", "r");
     if (cmdline)
     {
@@ -96,16 +89,14 @@ main (void)
         while ((c = fgetc (cmdline)) != EOF)
         {
             if (c == 'r' && fgetc (cmdline) == 'o' && fgetc (cmdline) == 'o' && fgetc (cmdline) == 't' && fgetc (cmdline) == '=')
-                cmd.root = get_value (cmdline);
+                root_path = get_value (cmdline);
         }
         fclose (cmdline);
     }
 
-    char *root_path = cmd.root ? cmd.root : DEFAULT_ROOT_PATH;
+    mount ((root_path) ? root_path : DEFAULT_ROOT_PATH, "/root", DEFAULT_FILESYSTEM_TYPE, MS_RDONLY, NULL);
     
-    mount (root_path, "/root", DEFAULT_FILESYSTEM_TYPE, MS_RDONLY, NULL);
-    
-    if (cmd.root)
+    if (root_path)
         free (root_path);
     
     umount ("/proc");
