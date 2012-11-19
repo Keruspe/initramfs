@@ -6,17 +6,15 @@
 #include <unistd.h>
 #include <sys/mount.h>
 
-#define DEFAULT_ROOT_PATH "/dev/mapper/root-luks"
-#define DEFAULT_INIT_PATH "/sbin/init"
-#define DEFAULT_FILESYSTEM_TYPE "ext4"
-
 #define LUKS_HEADER_PLAIN "/root/luks_header"
 #define LUKS_HEADER_ENCRYPTED LUKS_HEADER_PLAIN ".gpg"
 #define LUKS_PASSFILE_PLAIN "/root/luks_passfile"
 #define LUKS_PASSFILE_ENCRYPTED LUKS_PASSFILE_PLAIN ".gpg"
 #define LUKS_DATA_DEVICE "/dev/sda5"
 
-#define MAX_INIT_PATH_SIZE 25
+#define DEFAULT_ROOT_PATH "/dev/mapper/root-luks"
+#define DEFAULT_INIT_PATH "/sbin/init"
+#define DEFAULT_FILESYSTEM_TYPE "ext4"
 
 static int 
 is_blank (char c)
