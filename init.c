@@ -13,9 +13,9 @@
 #define LUKS_DATA_DEVICE "/dev/sda5"
 #define LUKS_VOLUME "root-luks"
 
-#define DEFAULT_ROOT_PATH "/dev/mapper/" LUKS_VOLUME
-#define DEFAULT_INIT_PATH "/sbin/init"
-#define DEFAULT_FILESYSTEM_TYPE "ext4"
+#define ROOT_PATH "/dev/mapper/" LUKS_VOLUME
+#define INIT_PATH "/sbin/init"
+#define FILESYSTEM_TYPE "ext4"
 
 #define CIPHER GCRY_CIPHER_AES256
 
@@ -48,26 +48,6 @@ aes_decrypt (gcry_cipher_hd_t handle,
         fputc (content[i], out);
     fclose (out);
     free (content);
-}
-
-static char *
-get_value (FILE *f) {
-    char *path = (char *) malloc (10 * sizeof (char));
-    int i = 0;
-    char c;
-    while (!((c = fgetc (f)) == ' ' || c == '\t' || c == '\r' || c == '\n' || c == EOF))
-    {
-        path[i] = c;
-        if (++i % 10 == 0)
-            path = (char *) realloc (path, (i + 10) * sizeof (char));
-    }
-    if (i == 0)
-    {
-        free (path);
-        return NULL;
-    }
-    path[i] = '\0';
-    return path;
 }
 
 int
@@ -105,23 +85,7 @@ main (void)
     crypt_activate_by_keyfile_offset(cd, LUKS_VOLUME, 0, LUKS_PASSFILE_PLAIN, 0, 0, 0);
     crypt_free (cd);
 
-    char *root_path = NULL;
-    FILE *cmdline = fopen ("/proc/cmdline", "r");
-    if (cmdline)
-    {
-        char c;
-        while ((c = fgetc (cmdline)) != EOF)
-        {
-            if (c == 'r' && fgetc (cmdline) == 'o' && fgetc (cmdline) == 'o' && fgetc (cmdline) == 't' && fgetc (cmdline) == '=')
-                root_path = get_value (cmdline);
-        }
-        fclose (cmdline);
-    }
-
-    mount ((root_path) ? root_path : DEFAULT_ROOT_PATH, "/root", DEFAULT_FILESYSTEM_TYPE, MS_RDONLY, NULL);
-    
-    if (root_path)
-        free (root_path);
+    mount (ROOT_PATH, "/root", FILESYSTEM_TYPE, MS_RDONLY, NULL);
     
     umount ("/proc");
     umount ("/sys");
@@ -132,5 +96,5 @@ main (void)
     if (chroot (".") != 0) return -1;
     if (chdir ("/") != 0) return -1;
     
-    execl (DEFAULT_INIT_PATH, DEFAULT_INIT_PATH, NULL);
+    execl (INIT_PATH, INIT_PATH, NULL);
 }
