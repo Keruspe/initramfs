@@ -36,18 +36,15 @@ main (int argc, char *argv[])
     size_t len = 0;
     size_t total_size = 4096;
     char *content = (char *) malloc (total_size * sizeof (char));
-    for (char c = fgetc (in); c != EOF; c = fgetc (in))
+    for (char c; (c = fgetc (in)) != EOF; ++len)
     {
-        if ((len % 4096) == 5)
+        if (len && (len % 4096) == 0)
         {
             total_size += 4096;
             content = (char *) realloc (content, total_size * sizeof (char));
         }
-        content[++len + 4] = c;
+        content[len] = c;
     }
-    char tmp = content[5];
-    sprintf (content, "%5lu", len);
-    content[5] = tmp;
 
     size_t keylen = gcry_cipher_get_algo_keylen (CIPHER);
     size_t blklen = gcry_cipher_get_algo_blklen (CIPHER);
@@ -69,7 +66,7 @@ main (int argc, char *argv[])
     gcry_cipher_encrypt (handle, content, total_size, NULL, 0);
 
     FILE *out = fopen (output_file, "w+");
-    fprintf (out, "%s\n", iv);
+    fprintf (out, "%5lu%s\n", len, iv);
     for (size_t i = 0; i < total_size; ++i)
         fputc (content[i], out);
     fclose (out);
