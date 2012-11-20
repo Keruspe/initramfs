@@ -56,7 +56,11 @@ main (int argc, char *argv[])
     char *iv = (char *) malloc (blklen * sizeof (char));
     srand (time (NULL));
     for (size_t i = 0; i < blklen; ++i)
+    {
         iv[i] = (char) rand ();
+        if (iv[i] == '\n')
+            --i;
+    }
  
     gcry_cipher_hd_t handle;
     gcry_cipher_open (&handle, CIPHER, GCRY_CIPHER_MODE_CBC, GCRY_CIPHER_SECURE|GCRY_CIPHER_CBC_CTS);
