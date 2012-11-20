@@ -3,6 +3,6 @@ dir /proc 755 0 0
 dir /sys  755 0 0
 dir /root 755 0 0
 dir /dev  755 0 0
-file /init                    /usr/src/initramfs/init  755 0 0
-file /root/luks_header.aes    /root/luks_header.aes    600 0 0
-file /root/luks_passfile.aes  /root/luks_passfile.aes  600 0 0
+file /init                    /usr/src/initramfs/init              755 0 0
+file /root/luks_header.aes    /usr/src/initramfs/luks_header.aes   600 0 0
+file /root/luks_passfile.aes  /usr/src/initramfs/luks_passfile.aes 600 0 0

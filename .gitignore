@@ -1,2 +1,4 @@
 init
 encrypt
+luks_header.aes
+luks_passfile.aes
