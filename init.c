@@ -18,7 +18,6 @@
 #define DEFAULT_FILESYSTEM_TYPE "ext4"
 
 #define CIPHER GCRY_CIPHER_AES256
-#define SIZE 4096
 
 static void
 aes_decrypt (gcry_cipher_hd_t handle,
@@ -27,12 +26,13 @@ aes_decrypt (gcry_cipher_hd_t handle,
              const char      *plain_file)
 {
     FILE *in = fopen (encrypted_file, "r");
+    char *iv = (char *) malloc (blklen * sizeof (char));
+    size_t len;
+    fscanf (in, "%5lu%s\n", &len, iv);
 
-    char iv[16];
-    fscanf (in, "%s\n", iv);
-
-    char content[SIZE];
-    for (size_t i = 0; i <= SIZE; ++i)
+    size_t total_size = 4096 * ((len/4096) + 1);
+    char *content = (char *) malloc (total_size * sizeof (char));
+    for (size_t i = 0; i <= total_size; ++i)
         content[i] = fgetc (in);
 
     fclose (in);
@@ -41,13 +41,13 @@ aes_decrypt (gcry_cipher_hd_t handle,
     gcry_cipher_setiv (handle, iv, blklen);
     gcry_cipher_decrypt (handle, content, 512, NULL, 0);
 
-    size_t len;
-    sscanf (content, "%5lu", &len);
+    free (iv);
 
     FILE *out = fopen (plain_file, "w+");
     for (size_t i = 0; i < len; ++i)
-        fputc (content[i+5], out);
+        fputc (content[i], out);
     fclose (out);
+    free (content);
 }
 
 static char *
