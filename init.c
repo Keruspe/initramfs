@@ -1,5 +1,5 @@
 #include <libcryptsetup.h>
-#include <gpgme.h>
+#include <gcrypt.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -7,9 +7,9 @@
 #include <sys/mount.h>
 
 #define LUKS_HEADER_PLAIN "/root/luks_header"
-#define LUKS_HEADER_ENCRYPTED LUKS_HEADER_PLAIN ".gpg"
+#define LUKS_HEADER_ENCRYPTED LUKS_HEADER_PLAIN ".aes"
 #define LUKS_PASSFILE_PLAIN "/root/luks_passfile"
-#define LUKS_PASSFILE_ENCRYPTED LUKS_PASSFILE_PLAIN ".gpg"
+#define LUKS_PASSFILE_ENCRYPTED LUKS_PASSFILE_PLAIN ".aes"
 #define LUKS_DATA_DEVICE "/dev/sda5"
 #define LUKS_VOLUME "root-luks"
 
@@ -17,10 +17,37 @@
 #define DEFAULT_INIT_PATH "/sbin/init"
 #define DEFAULT_FILESYSTEM_TYPE "ext4"
 
-static int 
-is_blank (char c)
+#define CIPHER GCRY_CIPHER_AES256
+#define SIZE 4096
+
+static void
+aes_decrypt (gcry_cipher_hd_t handle,
+             size_t           blklen,
+             const char      *encrypted_file,
+             const char      *plain_file)
 {
-    return (c == ' ' || c == '\t' || c == '\r' || c == '\n' || c == EOF);
+    FILE *in = fopen (encrypted_file, "r");
+
+    char iv[16];
+    fscanf (in, "%s\n", iv);
+
+    char content[SIZE];
+    for (size_t i = 0; i <= SIZE; ++i)
+        content[i] = fgetc (in);
+
+    fclose (in);
+
+    gcry_cipher_reset (handle);
+    gcry_cipher_setiv (handle, iv, blklen);
+    gcry_cipher_decrypt (handle, content, 512, NULL, 0);
+
+    size_t len;
+    sscanf (content, "%5lu", &len);
+
+    FILE *out = fopen (plain_file, "w+");
+    for (size_t i = 0; i < len; ++i)
+        fputc (content[i+5], out);
+    fclose (out);
 }
 
 static char *
@@ -28,7 +55,7 @@ get_value (FILE *f) {
     char *path = (char *) malloc (10 * sizeof (char));
     int i = 0;
     char c;
-    while (!is_blank (c = fgetc (f)))
+    while (!((c = fgetc (f)) == ' ' || c == '\t' || c == '\r' || c == '\n' || c == EOF))
     {
         path[i] = c;
         if (++i % 10 == 0)
@@ -43,25 +70,6 @@ get_value (FILE *f) {
     return path;
 }
 
-static void
-gpgme_decrypt (gpgme_ctx_t context,
-               const char *encrypted_file,
-               const char *plain_file)
-{
-    gpgme_data_t encrypted, plain;
-    FILE *ef = fopen (encrypted_file, "r");
-    FILE *pf = fopen (plain_file, "w+");
-    gpgme_data_new_from_stream (&encrypted, ef);
-    gpgme_data_new_from_stream (&plain, pf);
-
-    gpgme_op_decrypt (context, encrypted, plain);
-
-    gpgme_data_release (plain);
-    gpgme_data_release (encrypted);
-    fclose (ef);
-    fclose (pf);
-}
-
 int
 main (void)
 {
@@ -69,18 +77,25 @@ main (void)
     mount ("none", "/sys", "sysfs", 0, NULL);
     mount ("none", "/dev", "devtmpfs", 0, NULL);
 
-    gpgme_ctx_t context;
-    gpgme_check_version (NULL);
-    gpgme_new (&context);
+    size_t keylen = gcry_cipher_get_algo_keylen (CIPHER);
+    size_t blklen = gcry_cipher_get_algo_blklen (CIPHER);
+    char *key = getpass ("Passphrase: ");
 
-    gpgme_decrypt (context,
-                   LUKS_HEADER_ENCRYPTED,
-                   LUKS_HEADER_PLAIN);
-    gpgme_decrypt (context,
-                   LUKS_PASSFILE_ENCRYPTED,
-                   LUKS_PASSFILE_PLAIN);
+    gcry_cipher_hd_t handle;
+    gcry_cipher_open (&handle, CIPHER, GCRY_CIPHER_MODE_CBC, GCRY_CIPHER_SECURE|GCRY_CIPHER_CBC_CTS);
+    gcry_cipher_setkey (handle, key, keylen);
 
-    gpgme_release (context);
+    aes_decrypt (handle,
+                 blklen,
+                 LUKS_HEADER_ENCRYPTED,
+                 LUKS_HEADER_PLAIN);
+    aes_decrypt (handle,
+                 blklen,
+                 LUKS_PASSFILE_ENCRYPTED,
+                 LUKS_PASSFILE_PLAIN);
+
+    gcry_cipher_close(handle);
+    free (key);
 
     struct crypt_device *cd = NULL;
     crypt_init(&cd, LUKS_HEADER_PLAIN);
