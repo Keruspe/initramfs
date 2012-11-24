@@ -65,6 +65,7 @@ main (int argc, char *argv[])
     gcry_cipher_setiv (handle, iv, blklen);
     gcry_cipher_encrypt (handle, content, total_size, NULL, 0);
 
+    unlink (output_file);
     FILE *out = fopen (output_file, "w+");
     fprintf (out, "%5lu%s\n", len, iv);
     for (size_t i = 0; i < total_size; ++i)
