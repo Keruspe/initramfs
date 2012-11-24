@@ -17,38 +17,13 @@
 #define INIT_PATH "/sbin/init"
 #define FILESYSTEM_TYPE "ext4"
 
-#define CIPHER GCRY_CIPHER_AES256
+#include "decrypt-util.c"
 
-static void
-aes_decrypt (gcry_cipher_hd_t handle,
-             size_t           blklen,
-             const char      *encrypted_file,
-             const char      *plain_file)
-{
-    FILE *in = fopen (encrypted_file, "r");
-    char *iv = (char *) malloc (blklen * sizeof (char));
-    size_t len;
-    fscanf (in, "%5lu%s\n", &len, iv);
-
-    size_t total_size = 4096 * ((len/4096) + 1);
-    char *content = (char *) malloc (total_size * sizeof (char));
-    for (size_t i = 0; i <= total_size; ++i)
-        content[i] = fgetc (in);
-
-    fclose (in);
-
-    gcry_cipher_reset (handle);
-    gcry_cipher_setiv (handle, iv, blklen);
-    gcry_cipher_decrypt (handle, content, 512, NULL, 0);
-
-    free (iv);
-
-    FILE *out = fopen (plain_file, "w+");
-    for (size_t i = 0; i < len; ++i)
-        fputc (content[i], out);
-    fclose (out);
-    free (content);
-}
+#define AES_DECRYPT(in, out, handle, blklen) \
+    decrypt (fopen (in, "rb"), \
+             fopen (out, "wb"), \
+             handle, \
+             blklen)
 
 int
 main (void)
@@ -65,14 +40,14 @@ main (void)
     gcry_cipher_open (&handle, CIPHER, GCRY_CIPHER_MODE_CBC, GCRY_CIPHER_SECURE|GCRY_CIPHER_CBC_CTS);
     gcry_cipher_setkey (handle, key, keylen);
 
-    aes_decrypt (handle,
-                 blklen,
-                 LUKS_HEADER_ENCRYPTED,
-                 LUKS_HEADER_PLAIN);
-    aes_decrypt (handle,
-                 blklen,
-                 LUKS_PASSFILE_ENCRYPTED,
-                 LUKS_PASSFILE_PLAIN);
+    AES_DECRYPT (LUKS_HEADER_ENCRYPTED,
+                 LUKS_HEADER_PLAIN,
+                 handle,
+                 blklen);
+    AES_DECRYPT (LUKS_PASSFILE_ENCRYPTED,
+                 LUKS_PASSFILE_PLAIN,
+                 handle,
+                 blklen);
 
     gcry_cipher_close(handle);
     free (key);
