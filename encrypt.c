@@ -8,30 +8,13 @@
 int
 main (int argc, char *argv[])
 {
-    const char *output_file = NULL;
-    FILE *in = NULL;
-
-    switch (argc)
+    if (argc != 3)
     {
-    case 3:
-        in = fopen (argv[1], "rb");
-    case 2:
-        output_file = argv[argc - 1];
-        break;
-    default:
-        fprintf (stderr, "Need either one or two arguments: <output file> or <input file> <output file>\n");
+        fprintf (stderr, "Need exactly two arguments: <input file> <output file>\n");
         return 1;
     }
 
-    if (!in)
-    {
-        if (isatty (fileno (stdin)))
-        {
-            fprintf (stderr, "You need to pipe content if you only specify an output file or if input file is not readable\n");
-            return 1;
-        }
-        in = stdin;
-    }
+    FILE *in = fopen (argv[1], "rb");
 
     fseek (in, 0, SEEK_END);
     size_t len = ftell (in);
@@ -56,8 +39,8 @@ main (int argc, char *argv[])
 
     #include "crypt-deinit.c"
 
-    unlink (output_file);
-    FILE *out = fopen (output_file, "wb");
+    unlink (argv[2]);
+    FILE *out = fopen (argv[2], "wb");
     fwrite (iv, blklen, 1, out);
     fwrite (content, len, 1, out);
     fclose (out);
