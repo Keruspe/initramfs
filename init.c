@@ -32,13 +32,7 @@ main (void)
     mount ("none", "/sys", "sysfs", 0, NULL);
     mount ("none", "/dev", "devtmpfs", 0, NULL);
 
-    size_t keylen = gcry_cipher_get_algo_keylen (CIPHER);
-    size_t blklen = gcry_cipher_get_algo_blklen (CIPHER);
-    char *key = getpass ("Passphrase: ");
-
-    gcry_cipher_hd_t handle;
-    gcry_cipher_open (&handle, CIPHER, GCRY_CIPHER_MODE_CBC, GCRY_CIPHER_SECURE|GCRY_CIPHER_CBC_CTS);
-    gcry_cipher_setkey (handle, key, keylen);
+    #include "crypt-init.c"
 
     AES_DECRYPT (LUKS_HEADER_ENCRYPTED,
                  LUKS_HEADER_PLAIN,
@@ -49,8 +43,7 @@ main (void)
                  handle,
                  blklen);
 
-    gcry_cipher_close(handle);
-    free (key);
+    #include "crypt-deinit.c"
 
     struct crypt_device *cd = NULL;
     crypt_init(&cd, LUKS_HEADER_PLAIN);

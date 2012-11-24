@@ -40,9 +40,7 @@ main (int argc, char *argv[])
     fread (content, len, 1, in);
     fclose (in);
 
-    size_t keylen = gcry_cipher_get_algo_keylen (CIPHER);
-    size_t blklen = gcry_cipher_get_algo_blklen (CIPHER);
-    char *key = getpass ("Passphrase: ");
+    #include "crypt-init.c"
 
     char *iv = (char *) malloc (blklen * sizeof (char));
     srand (time (NULL));
@@ -53,11 +51,10 @@ main (int argc, char *argv[])
             --i;
     }
  
-    gcry_cipher_hd_t handle;
-    gcry_cipher_open (&handle, CIPHER, GCRY_CIPHER_MODE_CBC, GCRY_CIPHER_SECURE|GCRY_CIPHER_CBC_CTS);
-    gcry_cipher_setkey (handle, key, keylen);
     gcry_cipher_setiv (handle, iv, blklen);
     gcry_cipher_encrypt (handle, content, len, NULL, 0);
+
+    #include "crypt-deinit.c"
 
     unlink (output_file);
     FILE *out = fopen (output_file, "wb");
@@ -65,8 +62,6 @@ main (int argc, char *argv[])
     fwrite (content, len, 1, out);
     fclose (out);
 
-    gcry_cipher_close (handle);
-    free (key);
     free (iv);
     free (content);
 
