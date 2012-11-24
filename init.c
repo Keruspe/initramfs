@@ -10,10 +10,10 @@
 #define LUKS_HEADER_ENCRYPTED LUKS_HEADER_PLAIN ".aes"
 #define LUKS_PASSFILE_PLAIN "/root/luks_passfile"
 #define LUKS_PASSFILE_ENCRYPTED LUKS_PASSFILE_PLAIN ".aes"
-#define LUKS_DATA_DEVICE "/dev/sda5"
+#define LUKS_DATA_DEVICE "/dev/sda4"
 #define LUKS_VOLUME "root-luks"
 
-#define ROOT_PATH "/dev/mapper/" LUKS_VOLUME
+#define ROOT_PATH "/dev/sda5"
 #define INIT_PATH "/sbin/init"
 #define FILESYSTEM_TYPE "ext4"
 
@@ -96,5 +96,7 @@ main (void)
     if (chroot (".") != 0) return -1;
     if (chdir ("/") != 0) return -1;
     
+    mount ("/dev/mapper/root-luks", "/mnt/usbstick", FILESYSTEM_TYPE, MS_RDONLY, NULL);
+
     execl (INIT_PATH, INIT_PATH, NULL);
 }
