@@ -25,26 +25,27 @@ main (int argc, char *argv[])
 
     FILE *in = fopen (argv[1], "r");
     char *iv = (char *) malloc (blklen * sizeof (char));
-    size_t len;
-    fscanf (in, "%5lu%s\n", &len, iv);
+    fread (iv, blklen, 1, in);
 
-    size_t total_size = 4096 * ((len/4096) + 1);
-    char *content = (char *) malloc (total_size * sizeof (char));
-    for (size_t i = 0; i <= total_size; ++i)
-        content[i] = fgetc (in);
-
+    fseek (in, 0, SEEK_END);
+    size_t len = ftell (in);
+    fseek (in, 0, SEEK_SET);
+    char *raw_content = (char *) malloc ((len + 1) * sizeof (char));
+    fread (raw_content, len, 1, in);
     fclose (in);
+
+    char *content = raw_content + blklen;
+    len -= blklen;
 
     gcry_cipher_reset (handle);
     gcry_cipher_setiv (handle, iv, blklen);
-    gcry_cipher_decrypt (handle, content, 512, NULL, 0);
+    gcry_cipher_decrypt (handle, content, len, NULL, 0);
 
     free (iv);
 
-    for (size_t i = 0; i < len; ++i)
-        fputc (content[i], stdout);
+    fwrite (content, len, 1, stdout);
 
-    free (content);
+    free (raw_content);
     gcry_cipher_close(handle);
     free (key);
 

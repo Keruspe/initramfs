@@ -14,7 +14,7 @@ main (int argc, char *argv[])
     switch (argc)
     {
     case 3:
-        in = fopen (argv[1], "r");
+        in = fopen (argv[1], "rb");
     case 2:
         output_file = argv[argc - 1];
         break;
@@ -33,18 +33,12 @@ main (int argc, char *argv[])
         in = stdin;
     }
 
-    size_t len = 0;
-    size_t total_size = 4096;
-    char *content = (char *) malloc (total_size * sizeof (char));
-    for (char c; (c = fgetc (in)) != EOF; ++len)
-    {
-        if (len && (len % 4096) == 0)
-        {
-            total_size += 4096;
-            content = (char *) realloc (content, total_size * sizeof (char));
-        }
-        content[len] = c;
-    }
+    fseek (in, 0, SEEK_END);
+    size_t len = ftell (in);
+    fseek (in, 0, SEEK_SET);
+    char *content = (char *) malloc ((len + 1) * sizeof (char));
+    fread (content, len, 1, in);
+    fclose (in);
 
     size_t keylen = gcry_cipher_get_algo_keylen (CIPHER);
     size_t blklen = gcry_cipher_get_algo_blklen (CIPHER);
@@ -63,13 +57,12 @@ main (int argc, char *argv[])
     gcry_cipher_open (&handle, CIPHER, GCRY_CIPHER_MODE_CBC, GCRY_CIPHER_SECURE|GCRY_CIPHER_CBC_CTS);
     gcry_cipher_setkey (handle, key, keylen);
     gcry_cipher_setiv (handle, iv, blklen);
-    gcry_cipher_encrypt (handle, content, total_size, NULL, 0);
+    gcry_cipher_encrypt (handle, content, len, NULL, 0);
 
     unlink (output_file);
-    FILE *out = fopen (output_file, "w+");
-    fprintf (out, "%5lu%s\n", len, iv);
-    for (size_t i = 0; i < total_size; ++i)
-        fputc (content[i], out);
+    FILE *out = fopen (output_file, "wb");
+    fwrite (iv, blklen, 1, out);
+    fwrite (content, len, 1, out);
     fclose (out);
 
     gcry_cipher_close (handle);
