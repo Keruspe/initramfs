@@ -17,9 +17,11 @@
 #define INIT_PATH "/sbin/init"
 #define FILESYSTEM_TYPE "ext4"
 
+#if 0
 #include "decrypt-util.c"
+#endif
 
-#define AES_DECRYPT(in, out, handle, blklen) \
+#define AES_DECRYPT(in, out) \
     decrypt (fopen (in, "rb"), \
              fopen (out, "wb"), \
              handle, \
@@ -32,16 +34,13 @@ main (void)
     mount ("none", "/sys", "sysfs", 0, NULL);
     mount ("none", "/dev", "devtmpfs", 0, NULL);
 
+#if 0
     #include "crypt-init.c"
 
     AES_DECRYPT (LUKS_HEADER_ENCRYPTED,
-                 LUKS_HEADER_PLAIN,
-                 handle,
-                 blklen);
+                 LUKS_HEADER_PLAIN);
     AES_DECRYPT (LUKS_PASSFILE_ENCRYPTED,
-                 LUKS_PASSFILE_PLAIN,
-                 handle,
-                 blklen);
+                 LUKS_PASSFILE_PLAIN);
 
     #include "crypt-deinit.c"
 
@@ -52,6 +51,7 @@ main (void)
     crypt_set_password_retry(cd, 1);
     crypt_activate_by_keyfile_offset(cd, LUKS_VOLUME, 0, LUKS_PASSFILE_PLAIN, 0, 0, 0);
     crypt_free (cd);
+#endif
 
     mount (ROOT_PATH, "/root", FILESYSTEM_TYPE, MS_RDONLY, NULL);
     
@@ -64,7 +64,7 @@ main (void)
     if (chroot (".") != 0) return -1;
     if (chdir ("/") != 0) return -1;
     
-    mount ("/dev/mapper/root-luks", "/mnt/usbstick", FILESYSTEM_TYPE, MS_RDONLY, NULL);
+    //mount ("/dev/mapper/root-luks", "/mnt/usbstick", FILESYSTEM_TYPE, MS_RDONLY, NULL);
 
     execl (INIT_PATH, INIT_PATH, NULL);
 }
