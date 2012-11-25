@@ -3,6 +3,14 @@ dir /proc 755 0 0
 dir /sys  755 0 0
 dir /root 755 0 0
 dir /dev  755 0 0
-file /init                    /usr/src/initramfs/init              755 0 0
-file /root/luks_header.aes    /usr/src/initramfs/luks_header.aes   600 0 0
-file /root/luks_passfile.aes  /usr/src/initramfs/luks_passfile.aes 600 0 0
+file /init                             /usr/src/initramfs/init              755 0 0
+file /usr/lib64/libdl-2.16.so          /usr/lib64/libdl-2.16.so             755 0 0
+file /usr/lib64/libc-2.16.so           /usr/lib64/libc-2.16.so              755 0 0
+file /usr/lib64/libnss_compat-2.16.so  /usr/lib64/libnss_compat-2.16.so     755 0 0
+file /usr/lib64/libnss_db-2.16.so      /usr/lib64/libnss_db-2.16.so         755 0 0
+file /usr/lib64/libnss_files-2.16.so   /usr/lib64/libnss_files-2.16.so      755 0 0
+file /usr/lib64/libnss_hesiod-2.16.so  /usr/lib64/libnss_hesiod-2.16.so     755 0 0
+file /usr/lib64/libnss_nis-2.16.so     /usr/lib64/libnss_nis-2.16.so        755 0 0
+file /usr/lib64/libnss_nisplus-2.16.so /usr/lib64/libnss_nisplus-2.16.so    755 0 0
+file /root/luks_header.aes             /usr/src/initramfs/luks_header.aes   600 0 0
+file /root/luks_passfile.aes           /usr/src/initramfs/luks_passfile.aes 600 0 0
