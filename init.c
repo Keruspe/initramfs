@@ -75,5 +75,5 @@ main (void)
     
     mount ("/dev/mapper/root-luks", "/mnt/usbstick", FILESYSTEM_TYPE, MS_RDONLY, NULL);
 
-    execl (INIT_PATH, INIT_PATH, NULL);
+    return execl (INIT_PATH, INIT_PATH, NULL);
 }
