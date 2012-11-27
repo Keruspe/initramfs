@@ -22,6 +22,7 @@
 #define AES_DECRYPT(in, out) \
     decrypt (fopen (in, "rb"), \
              fopen (out, "wb"), \
+             key, \
              handle, \
              blklen);
 
