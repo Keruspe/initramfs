@@ -68,7 +68,7 @@ main (int argc, char *argv[])
     fwrite (iv, blklen, 1, out);
 
     char len_buffer[8];
-    sprintf (len_buffer, "%8lu", real_len);
+    sprintf (len_buffer, "%7lu", real_len);
     fwrite (len_buffer, 8, 1, out);
     fwrite (content, len, 1, out);
     fclose (out);
