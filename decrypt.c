@@ -17,7 +17,7 @@ main (int argc, char *argv[])
 
     #include "crypt-init.c"
 
-    decrypt (fopen (argv[1], "rb"), stdout, key, handle, blklen);
+    decrypt (fopen (argv[1], "rb"), stdout, handle, blklen);
 
     #include "crypt-deinit.c"
 

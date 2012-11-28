@@ -39,40 +39,7 @@ main (int argc, char *argv[])
  
     gcry_cipher_setiv (handle, iv, blklen);
 
-    fprintf (stderr, "len: %lu (%lu)\n", len, real_len);
-
-    fprintf (stderr, "key: ");
-    for (size_t i = 0; i < strlen (key); ++i)
-        fprintf (stderr, "%d ", key[i]);
-    fprintf (stderr, "\n");
-
-    fprintf (stderr, "iv: ");
-    for (size_t i = 0; i < blklen; ++i)
-        fprintf (stderr, "%d ", iv[i]);
-    fprintf (stderr, "\n");
-
-    fprintf (stderr, "plain: ");
-    for (size_t i = 0; i < len; ++i)
-        fprintf (stderr, "%x ", content[i]);
-    fprintf (stderr, "\n");
-
     gcry_cipher_encrypt (handle, content, len, NULL, 0);
-
-    fprintf (stderr, "crypt: ");
-    for (size_t i = 0; i < len; ++i)
-        fprintf (stderr, "%x ", content[i]);
-    fprintf (stderr, "\n");
-
-#if 0
-    gcry_cipher_reset (handle);
-    gcry_cipher_setiv (handle, iv, blklen);
-    gcry_cipher_decrypt (handle, content, len, NULL, 0);
-
-    fprintf (stderr, "plain: ");
-    for (size_t i = 0; i < len; ++i)
-        fprintf (stderr, "%x ", content[i]);
-    fprintf (stderr, "\n");
-#endif
 
     #include "crypt-deinit.c"
 
