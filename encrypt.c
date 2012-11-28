@@ -23,8 +23,8 @@ main (int argc, char *argv[])
     size_t len = ((real_len / blklen) + 1) * blklen;
     fseek (in, 0, SEEK_SET);
     char *content = (char *) malloc ((len + 1) * sizeof (char));
-    fread (content, len, 1, in);
-    fclose (in);
+    if (fread (content, len, 1, in) != len)
+        goto out;
 
     char *iv = (char *) malloc (blklen * sizeof (char));
     srand (time (NULL));
@@ -85,7 +85,10 @@ main (int argc, char *argv[])
     fclose (out);
 
     free (iv);
+
+out:
     free (content);
+    fclose (in);
 
     return 0;
 }
