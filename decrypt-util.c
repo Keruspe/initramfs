@@ -1,5 +1,5 @@
 #define CIPHER GCRY_CIPHER_AES256
-#define READ(buf, len, in) if (fread (buf, len, 1, in) != len) goto out;
+#define READ(buf, len, in) if (fread (buf, len, 1, in) != 1) goto out;
 
 static void
 decrypt (FILE            *in,
