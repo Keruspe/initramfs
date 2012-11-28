@@ -24,7 +24,7 @@ main (int argc, char *argv[])
     size_t len = ((real_len / blklen) + 1) * blklen;
     fseek (in, 0, SEEK_SET);
     char *content = (char *) malloc ((len + 1) * sizeof (char));
-    READ (content, len, in)
+    READ (content, real_len, in)
 
     char *iv = (char *) malloc (blklen * sizeof (char));
     srand (time (NULL));
