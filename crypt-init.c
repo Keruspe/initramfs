@@ -10,8 +10,20 @@
     gcry_control (GCRYCTL_INITIALIZATION_FINISHED, 0);
 
     size_t blklen = gcry_cipher_get_algo_blklen (CIPHER);
+    size_t keylen = gcry_cipher_get_algo_keylen (CIPHER);
     char *key = getpass ("Passphrase: ");
+
+    if (strlen (key) < keylen)
+    {
+        key = (char *) realloc (key, keylen * sizeof (char));
+        for (size_t i = strlen (key); i < keylen; ++i)
+            key[i] = 0;
+    }
 
     gcry_cipher_hd_t handle;
     gcry_cipher_open (&handle, CIPHER, GCRY_CIPHER_MODE_CBC, GCRY_CIPHER_SECURE|GCRY_CIPHER_CBC_CTS);
-    gcry_cipher_setkey (handle, key, strlen (key));
+    gcry_error_t err = gcry_cipher_setkey (handle, key, keylen);
+    if (err)
+                            fprintf (stderr, "Failure: %s/%s\n",
+                                                        gcry_strsource (err),
+                                                                            gcry_strerror (err));
