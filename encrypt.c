@@ -31,10 +31,7 @@ main (int argc, char *argv[])
     for (size_t i = 0; i < blklen; ++i)
     {
         int r = rand () % 16;
-        if (r < 10)
-            iv[i] = '0' + i;
-        else
-            iv[i] = 'a' + i - 10;
+        iv[i] = (r % 10) + ((r > 10) ? 'a' : '0');
     }
  
     gcry_cipher_setiv (handle, iv, blklen);
