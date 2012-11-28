@@ -41,25 +41,36 @@ main (int argc, char *argv[])
 
     fprintf (stderr, "key: ");
     for (size_t i = 0; i < strlen (key); ++i)
-        fprintf (stderr, "%d ", (int) key[i]);
+        fprintf (stderr, "%d ", key[i]);
     fprintf (stderr, "\n");
 
     fprintf (stderr, "iv: ");
     for (size_t i = 0; i < blklen; ++i)
-        fprintf (stderr, "%d ", (int) iv[i]);
+        fprintf (stderr, "%d ", iv[i]);
     fprintf (stderr, "\n");
 
     fprintf (stderr, "plain: ");
     for (size_t i = 0; i < len; ++i)
-        fprintf (stderr, "%d ", (int) content[i]);
+        fprintf (stderr, "%x ", content[i]);
     fprintf (stderr, "\n");
 
     gcry_cipher_encrypt (handle, content, len, NULL, 0);
 
     fprintf (stderr, "crypt: ");
     for (size_t i = 0; i < len; ++i)
-        fprintf (stderr, "%d ", (int) content[i]);
+        fprintf (stderr, "%x ", content[i]);
     fprintf (stderr, "\n");
+
+#if 0
+    gcry_cipher_reset (handle);
+    gcry_cipher_setiv (handle, iv, blklen);
+    gcry_cipher_decrypt (handle, content, len, NULL, 0);
+
+    fprintf (stderr, "plain: ");
+    for (size_t i = 0; i < len; ++i)
+        fprintf (stderr, "%x ", content[i]);
+    fprintf (stderr, "\n");
+#endif
 
     #include "crypt-deinit.c"
 
@@ -67,8 +78,8 @@ main (int argc, char *argv[])
     FILE *out = fopen (argv[2], "wb");
     fwrite (iv, blklen, 1, out);
 
-    char len_buffer[8];
-    sprintf (len_buffer, "%7lu", real_len);
+    char len_buffer[9];
+    sprintf (len_buffer, "%8lu", real_len);
     fwrite (len_buffer, 8, 1, out);
     fwrite (content, len, 1, out);
     fclose (out);
