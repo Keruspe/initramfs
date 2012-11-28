@@ -1,3 +1,14 @@
+    if (!gcry_check_version (GCRYPT_VERSION))
+    {
+        fputs ("libgcrypt version mismatch\n", stderr);
+        exit (2);
+    }
+
+    gcry_control (GCRYCTL_SUSPEND_SECMEM_WARN);
+    gcry_control (GCRYCTL_INIT_SECMEM, 16384, 0);
+    gcry_control (GCRYCTL_RESUME_SECMEM_WARN);
+    gcry_control (GCRYCTL_INITIALIZATION_FINISHED, 0);
+
     size_t blklen = gcry_cipher_get_algo_blklen (CIPHER);
     size_t keylen = gcry_cipher_get_algo_keylen (CIPHER);
     char *key = "coucou"; //getpass ("Passphrase: ");
