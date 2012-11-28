@@ -1,4 +1,5 @@
 #define CIPHER GCRY_CIPHER_AES256
+#define READ(buf, len, in) if (fread (buf, len, 1, in) != len) goto out;
 
 static void
 decrypt (FILE            *in,
@@ -8,22 +9,22 @@ decrypt (FILE            *in,
          size_t           blklen)
 {
     char *iv = (char *) malloc (blklen * sizeof (char));
-    fread (iv, blklen, 1, in);
+    char *raw_content = NULL;
+    READ (iv, blklen, in)
 
     gcry_cipher_reset (handle);
     gcry_cipher_setiv (handle, iv, blklen);
 
     char len_buffer[9];
-    fread (len_buffer, 8, 1, in);
+    READ (len_buffer, 8, in)
     size_t real_len = atoi (len_buffer);
 
     fseek (in, 0, SEEK_END);
     size_t len = ftell (in);
     fseek (in, 0, SEEK_SET);
 
-    char *raw_content = (char *) malloc ((len + 1) * sizeof (char));
-    fread (raw_content, len, 1, in);
-    fclose (in);
+    raw_content = (char *) malloc ((len + 1) * sizeof (char));
+    READ (raw_content, len, in)
 
     char *content = raw_content + blklen + 8;
     len -= (blklen + 8);
@@ -55,7 +56,10 @@ decrypt (FILE            *in,
     fwrite (content, real_len, 1, out);
     fclose (out);
 
+out:
+    if (raw_content)
+        free (raw_content);
     free (iv);
-    free (raw_content);
+    fclose (in);
 }
 

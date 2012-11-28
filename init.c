@@ -66,10 +66,10 @@ main (void)
     UMOUNT ("/sys")
     UMOUNT ("/dev")
     
-    chdir ("/root");
+    if (chdir ("/root")) return -1;
     mount (".", "/", NULL, MS_MOVE, NULL);
-    chroot (".");
-    chdir ("/");
+    if (chroot (".")) return -1;
+    if (chdir ("/")) return -1;
 
     basic_mounts ();
     
