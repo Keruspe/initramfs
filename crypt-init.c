@@ -18,12 +18,9 @@
         key = (char *) realloc (key, keylen * sizeof (char));
         for (size_t i = strlen (key); i < keylen; ++i)
             key[i] = 0;
-    }
+    } else
+        key[keylen] = '\0';
 
     gcry_cipher_hd_t handle;
     gcry_cipher_open (&handle, CIPHER, GCRY_CIPHER_MODE_CBC, GCRY_CIPHER_SECURE|GCRY_CIPHER_CBC_CTS);
-    gcry_error_t err = gcry_cipher_setkey (handle, key, keylen);
-    if (err)
-                            fprintf (stderr, "Failure: %s/%s\n",
-                                                        gcry_strsource (err),
-                                                                            gcry_strerror (err));
+    gcry_cipher_setkey (handle, key, keylen);
