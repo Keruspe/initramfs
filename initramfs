@@ -1,0 +1,6 @@
+dir /sbin 755 0 0
+dir /proc 755 0 0
+dir /sys  755 0 0
+dir /root 755 0 0
+dir /dev  755 0 0
+file /init       /usr/src/initramfs/init 755 0 0

@@ -1,0 +1,3 @@
+To build it: make
+Then set as initramfs src into your kernel /usr/src/initramfs/initramfs
+(You must have git clone this into /usr/src/initramfs)
